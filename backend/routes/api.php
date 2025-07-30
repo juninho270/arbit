@@ -1,67 +1,48 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\UserController;
-use App\Http\Controllers\CryptocurrencyController;
-use App\Http\Controllers\ArbitrageController;
-use App\Http\Controllers\BotController;
-use App\Http\Controllers\InvestmentController;
-use App\Http\Controllers\AdminController;
+/**
+ * API Routes
+ * Define routes for API endpoints
+ */
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
-*/
+// Authentication routes
+$router->post('/api/login', 'AuthController@login');
+$router->post('/api/register', 'AuthController@register');
+$router->post('/api/logout', 'AuthController@logout', ['auth']);
+$router->get('/api/me', 'AuthController@me', ['auth']);
+$router->post('/api/login-as-user', 'AuthController@loginAsUser', ['auth', 'admin']);
 
-// Public routes
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/register', [AuthController::class, 'register']);
+// User routes
+$router->get('/api/users', 'UserController@index', ['auth', 'admin']);
+$router->post('/api/users', 'UserController@store', ['auth', 'admin']);
+$router->get('/api/users/{id}', 'UserController@show', ['auth']);
+$router->patch('/api/users/{id}', 'UserController@update', ['auth']);
+$router->delete('/api/users/{id}', 'UserController@destroy', ['auth', 'admin']);
+$router->patch('/api/users/{id}/balance', 'UserController@updateBalance', ['auth']);
 
-// Protected routes
-Route::middleware('auth:sanctum')->group(function () {
-    // Auth routes
-    Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/me', [AuthController::class, 'me']);
-    Route::post('/login-as-user', [AuthController::class, 'loginAsUser']);
+// Cryptocurrency routes
+$router->get('/api/cryptocurrencies', 'CryptocurrencyController@index');
+$router->get('/api/cryptocurrencies/{coinId}/price', 'CryptocurrencyController@getPrice');
+$router->patch('/api/cryptocurrencies/{coinId}/arbitrage-status', 'CryptocurrencyController@updateArbitrageStatus', ['auth', 'admin']);
 
-    // User routes
-    Route::apiResource('users', UserController::class);
-    Route::patch('/users/{user}/balance', [UserController::class, 'updateBalance']);
+// Arbitrage routes
+$router->get('/api/arbitrage/operations', 'ArbitrageController@index', ['auth']);
+$router->post('/api/arbitrage/execute-manual', 'ArbitrageController@executeManual', ['auth']);
+$router->get('/api/arbitrage/recent', 'ArbitrageController@recent', ['auth']);
 
-    // Cryptocurrency routes
-    Route::get('/cryptocurrencies', [CryptocurrencyController::class, 'index']);
-    Route::get('/cryptocurrencies/{coinId}/price', [CryptocurrencyController::class, 'getPrice']);
-    Route::patch('/cryptocurrencies/{coinId}/arbitrage-status', [CryptocurrencyController::class, 'updateArbitrageStatus']);
+// Bot routes
+$router->get('/api/bot/settings', 'BotController@getSettings', ['auth']);
+$router->patch('/api/bot/settings', 'BotController@updateSettings', ['auth']);
+$router->get('/api/bot/statistics', 'BotController@getStatistics', ['auth']);
 
-    // Arbitrage routes
-    Route::get('/arbitrage/operations', [ArbitrageController::class, 'index']);
-    Route::post('/arbitrage/execute-manual', [ArbitrageController::class, 'executeManual']);
-    Route::get('/arbitrage/recent', [ArbitrageController::class, 'recent']);
+// Investment routes
+$router->get('/api/investments/plans', 'InvestmentController@getPlans');
+$router->get('/api/investments/user', 'InvestmentController@getUserInvestments', ['auth']);
+$router->post('/api/investments', 'InvestmentController@createInvestment', ['auth']);
+$router->get('/api/investments/statistics', 'InvestmentController@getStatistics', ['auth']);
 
-    // Bot routes
-    Route::get('/bot/settings', [BotController::class, 'getSettings']);
-    Route::patch('/bot/settings', [BotController::class, 'updateSettings']);
-    Route::get('/bot/statistics', [BotController::class, 'getStatistics']);
-
-    // Investment routes
-    Route::get('/investments/plans', [InvestmentController::class, 'getPlans']);
-    Route::get('/investments/user', [InvestmentController::class, 'getUserInvestments']);
-    Route::post('/investments', [InvestmentController::class, 'createInvestment']);
-    Route::get('/investments/statistics', [InvestmentController::class, 'getStatistics']);
-
-    // Admin routes
-    Route::middleware('admin')->group(function () {
-        Route::get('/admin/stats', [AdminController::class, 'getStats']);
-        Route::get('/admin/system-settings', [AdminController::class, 'getSystemSettings']);
-        Route::patch('/admin/system-settings', [AdminController::class, 'updateSystemSettings']);
-        Route::get('/admin/recent-activity', [AdminController::class, 'getRecentActivity']);
-    });
-});
+// Admin routes
+$router->get('/api/admin/stats', 'AdminController@getStats', ['auth', 'admin']);
+$router->get('/api/admin/system-settings', 'AdminController@getSystemSettings', ['auth', 'admin']);
+$router->patch('/api/admin/system-settings', 'AdminController@updateSystemSettings', ['auth', 'admin']);
+$router->get('/api/admin/recent-activity', 'AdminController@getRecentActivity', ['auth', 'admin']);
