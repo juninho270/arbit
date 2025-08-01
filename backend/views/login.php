@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - CryptoArb Pro</title>
-    <link rel="stylesheet" href="/api/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
     <style>
         .login-container {
             min-height: 100vh;
@@ -233,6 +233,6 @@
             }
         });
     </script>
-    <script src="/api/assets/js/app.js"></script>
+    <script src="/assets/js/app.js"></script>
 </body>
 </html>
