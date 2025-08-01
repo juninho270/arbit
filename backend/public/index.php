@@ -13,7 +13,7 @@ session_start();
 // Define application constants
 define('APP_ROOT', dirname(__DIR__));
 define('PUBLIC_PATH', __DIR__);
-define('APP_PATH', APP_ROOT . '/app');
+define('APP_PATH', APP_ROOT . '/App');
 define('CONFIG_PATH', APP_ROOT . '/config');
 define('VIEWS_PATH', APP_ROOT . '/views');
 define('ROUTES_PATH', APP_ROOT . '/routes');
