@@ -6,133 +6,118 @@ use App\Core\Controller;
 use App\Core\Auth;
 use App\Models\User;
 
-/**
- * Authentication Controller
- * Handles user login, registration, logout and authentication
- */
 class AuthController extends Controller
 {
-    /**
-     * Login user and create session/token
-     */
-    public function login()
+    public function login($request, $response)
     {
-        $data = $this->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-        ]);
-
-        if (Auth::attempt($data['email'], $data['password'])) {
-            $user = Auth::user();
+        try {
+            $data = $request->getJson();
             
-            // Generate API token for API requests
+            if (!$data) {
+                $response->json(['error' => 'Invalid JSON'], 400);
+                return;
+            }
+            
+            $this->validateRequired($data, ['email', 'password']);
+            
+            $email = $this->sanitize($data['email']);
+            $password = $data['password'];
+            
+            if (Auth::attempt($email, $password)) {
+                $user = Auth::user();
+                $token = Auth::generateToken($user['id']);
+                
+                // Remove password from response
+                unset($user['password']);
+                
+                $response->json([
+                    'success' => true,
+                    'user' => $user,
+                    'token' => $token
+                ]);
+            } else {
+                $response->json(['error' => 'Invalid credentials'], 401);
+            }
+        } catch (\Exception $e) {
+            $response->json(['error' => $e->getMessage()], 400);
+        }
+    }
+
+    public function register($request, $response)
+    {
+        try {
+            $data = $request->getJson();
+            
+            $this->validateRequired($data, ['name', 'email', 'password']);
+            
+            $userData = [
+                'name' => $this->sanitize($data['name']),
+                'email' => $this->sanitize($data['email']),
+                'password' => $data['password']
+            ];
+            
+            $user = User::create($userData);
             $token = Auth::generateToken($user['id']);
             
-            $this->response->json([
+            // Remove password from response
+            unset($user['password']);
+            
+            $response->json([
+                'success' => true,
                 'user' => $user,
-                'token' => $token,
+                'token' => $token
             ]);
-        } else {
-            $this->response->json([
-                'error' => true,
-                'message' => 'As credenciais fornecidas estão incorretas.'
-            ], 401);
+        } catch (\Exception $e) {
+            $response->json(['error' => $e->getMessage()], 400);
         }
     }
 
-    /**
-     * Register a new user
-     */
-    public function register()
+    public function logout($request, $response)
     {
-        $data = $this->validate([
-            'name' => 'required',
-            'email' => 'required|email',
-            'password' => 'required|min:8',
-        ]);
-
-        // Check if email already exists
-        $existingUser = User::whereFirst('email', $data['email']);
-        if ($existingUser) {
-            $this->response->json([
-                'error' => true,
-                'message' => 'Este email já está em uso.'
-            ], 422);
-        }
-
-        // Hash password
-        $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
-        $data['balance'] = 1000; // Starting balance
-        $data['bot_balance'] = 0;
-        $data['role'] = 'user';
-        $data['status'] = 'active';
-
-        $user = User::create($data);
-        
-        // Auto login after registration
-        Auth::loginById($user['id']);
-        $token = Auth::generateToken($user['id']);
-
-        $this->response->json([
-            'user' => $user,
-            'token' => $token,
-        ], 201);
-    }
-
-    /**
-     * Logout user
-     */
-    public function logout()
-    {
-        $this->requireAuth();
-        
         Auth::logout();
-        
-        $this->response->json([
-            'message' => 'Logout realizado com sucesso'
-        ]);
+        $response->json(['success' => true]);
     }
 
-    /**
-     * Get authenticated user
-     */
-    public function me()
+    public function me($request, $response)
     {
-        $this->requireAuth();
-        
-        $this->response->json($this->user());
-    }
-
-    /**
-     * Admin login as another user
-     */
-    public function loginAsUser()
-    {
-        $this->requireAdmin();
-        
-        $data = $this->validate([
-            'user_id' => 'required|numeric',
-        ]);
-
-        $targetUser = User::find($data['user_id']);
-        if (!$targetUser) {
-            $this->response->json([
-                'error' => true,
-                'message' => 'Usuário não encontrado'
-            ], 404);
+        if (!Auth::check()) {
+            $response->json(['error' => 'Unauthorized'], 401);
+            return;
         }
+        
+        $user = Auth::user();
+        unset($user['password']);
+        
+        $response->json($user);
+    }
 
-        // Login as target user
-        Auth::loginById($targetUser['id']);
-        $token = Auth::generateToken($targetUser['id']);
-
-        // Update last login
-        User::update($targetUser['id'], ['last_login' => date('Y-m-d H:i:s')]);
-
-        $this->response->json([
-            'user' => $targetUser,
-            'token' => $token,
-            'impersonated' => true,
-        ]);
+    public function loginAsUser($request, $response)
+    {
+        if (!Auth::check() || !User::isAdmin(Auth::user())) {
+            $response->json(['error' => 'Forbidden'], 403);
+            return;
+        }
+        
+        try {
+            $data = $request->getJson();
+            $this->validateRequired($data, ['user_id']);
+            
+            $targetUser = User::find($data['user_id']);
+            if (!$targetUser) {
+                $response->json(['error' => 'User not found'], 404);
+                return;
+            }
+            
+            $token = Auth::generateToken($targetUser['id']);
+            unset($targetUser['password']);
+            
+            $response->json([
+                'success' => true,
+                'user' => $targetUser,
+                'token' => $token
+            ]);
+        } catch (\Exception $e) {
+            $response->json(['error' => $e->getMessage()], 400);
+        }
     }
 }

@@ -3,218 +3,171 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Auth;
 use App\Models\User;
 
-/**
- * User Controller
- * Handles user management operations
- */
 class UserController extends Controller
 {
-    /**
-     * Display a listing of users (Admin only)
-     */
-    public function index()
+    public function index($request, $response)
     {
-        $this->requireAdmin();
-
-        $users = User::query("SELECT * FROM users ORDER BY created_at DESC");
-
-        $this->response->json($users);
-    }
-
-    /**
-     * Store a newly created user (Admin only)
-     */
-    public function store()
-    {
-        $this->requireAdmin();
-
-        $data = $this->validate([
-            'name' => 'required',
-            'email' => 'required|email',
-            'password' => 'required|min:8',
-            'balance' => 'required|numeric',
-            'bot_balance' => 'required|numeric',
-            'role' => 'required',
-            'status' => 'required',
-        ]);
-
-        // Check if email already exists
-        $existingUser = User::whereFirst('email', $data['email']);
-        if ($existingUser) {
-            $this->response->json([
-                'error' => true,
-                'message' => 'Este email já está em uso.'
-            ], 422);
+        if (!Auth::check() || !User::isAdmin(Auth::user())) {
+            $response->json(['error' => 'Forbidden'], 403);
+            return;
         }
-
-        // Hash password
-        $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
-
-        $user = User::create($data);
-
-        $this->response->json($user, 201);
-    }
-
-    /**
-     * Display the specified user
-     */
-    public function show($id)
-    {
-        $currentUser = $this->user();
         
-        // Users can only see their own profile, admins can see any
-        if ($currentUser['role'] !== 'admin' && $currentUser['id'] != $id) {
-            $this->response->json([
-                'error' => true,
-                'message' => 'Acesso negado'
-            ], 403);
+        $users = User::all();
+        
+        // Remove passwords from response
+        foreach ($users as &$user) {
+            unset($user['password']);
         }
+        
+        $response->json($users);
+    }
 
+    public function store($request, $response)
+    {
+        if (!Auth::check() || !User::isAdmin(Auth::user())) {
+            $response->json(['error' => 'Forbidden'], 403);
+            return;
+        }
+        
+        try {
+            $data = $request->getJson();
+            $this->validateRequired($data, ['name', 'email']);
+            
+            $userData = [
+                'name' => $this->sanitize($data['name']),
+                'email' => $this->sanitize($data['email']),
+                'password' => $data['password'] ?? 'password',
+                'balance' => $data['balance'] ?? 0,
+                'bot_balance' => $data['bot_balance'] ?? 0,
+                'role' => $data['role'] ?? 'user',
+                'status' => $data['status'] ?? 'active'
+            ];
+            
+            $user = User::create($userData);
+            unset($user['password']);
+            
+            $response->json($user);
+        } catch (\Exception $e) {
+            $response->json(['error' => $e->getMessage()], 400);
+        }
+    }
+
+    public function show($request, $response)
+    {
+        if (!Auth::check()) {
+            $response->json(['error' => 'Unauthorized'], 401);
+            return;
+        }
+        
+        $id = $request->getParam('id');
+        $currentUser = Auth::user();
+        
+        // Users can only view their own profile, admins can view any
+        if ($currentUser['id'] != $id && !User::isAdmin($currentUser)) {
+            $response->json(['error' => 'Forbidden'], 403);
+            return;
+        }
+        
         $user = User::find($id);
         if (!$user) {
-            $this->response->json([
-                'error' => true,
-                'message' => 'Usuário não encontrado'
-            ], 404);
+            $response->json(['error' => 'User not found'], 404);
+            return;
         }
-
-        $this->response->json($user);
+        
+        unset($user['password']);
+        $response->json($user);
     }
 
-    /**
-     * Update the specified user
-     */
-    public function update($id)
+    public function update($request, $response)
     {
-        $currentUser = $this->user();
+        if (!Auth::check()) {
+            $response->json(['error' => 'Unauthorized'], 401);
+            return;
+        }
+        
+        $id = $request->getParam('id');
+        $currentUser = Auth::user();
         
         // Users can only update their own profile, admins can update any
-        if ($currentUser['role'] !== 'admin' && $currentUser['id'] != $id) {
-            $this->response->json([
-                'error' => true,
-                'message' => 'Acesso negado'
-            ], 403);
+        if ($currentUser['id'] != $id && !User::isAdmin($currentUser)) {
+            $response->json(['error' => 'Forbidden'], 403);
+            return;
         }
-
-        $user = User::find($id);
-        if (!$user) {
-            $this->response->json([
-                'error' => true,
-                'message' => 'Usuário não encontrado'
-            ], 404);
-        }
-
-        $allowedFields = ['name', 'email', 'balance', 'bot_balance'];
         
-        // Only admins can update role and status
-        if ($currentUser['role'] === 'admin') {
-            $allowedFields = array_merge($allowedFields, ['role', 'status']);
-        }
-
-        $data = [];
-        foreach ($allowedFields as $field) {
-            if ($this->request->has($field)) {
-                $data[$field] = $this->request->input($field);
+        try {
+            $data = $request->getJson();
+            $user = User::update($id, $data);
+            
+            if (!$user) {
+                $response->json(['error' => 'User not found'], 404);
+                return;
             }
+            
+            unset($user['password']);
+            $response->json($user);
+        } catch (\Exception $e) {
+            $response->json(['error' => $e->getMessage()], 400);
         }
-
-        if (empty($data)) {
-            $this->response->json([
-                'error' => true,
-                'message' => 'Nenhum dado para atualizar'
-            ], 400);
-        }
-
-        // Validate email uniqueness if updating email
-        if (isset($data['email'])) {
-            $existingUser = User::whereFirst('email', $data['email']);
-            if ($existingUser && $existingUser['id'] != $id) {
-                $this->response->json([
-                    'error' => true,
-                    'message' => 'Este email já está em uso.'
-                ], 422);
-            }
-        }
-
-        $updatedUser = User::update($id, $data);
-
-        $this->response->json($updatedUser);
     }
 
-    /**
-     * Remove the specified user (Admin only)
-     */
-    public function destroy($id)
+    public function destroy($request, $response)
     {
-        $this->requireAdmin();
-        
-        $currentUser = $this->user();
-        
-        // Prevent admin from deleting themselves
-        if ($currentUser['id'] == $id) {
-            $this->response->json([
-                'error' => true,
-                'message' => 'Você não pode excluir sua própria conta'
-            ], 400);
+        if (!Auth::check() || !User::isAdmin(Auth::user())) {
+            $response->json(['error' => 'Forbidden'], 403);
+            return;
         }
-
-        $user = User::find($id);
-        if (!$user) {
-            $this->response->json([
-                'error' => true,
-                'message' => 'Usuário não encontrado'
-            ], 404);
+        
+        $id = $request->getParam('id');
+        $deleted = User::delete($id);
+        
+        if ($deleted) {
+            $response->json(['success' => true]);
+        } else {
+            $response->json(['error' => 'User not found'], 404);
         }
-
-        User::delete($id);
-
-        $this->response->json([
-            'message' => 'Usuário excluído com sucesso'
-        ]);
     }
 
-    /**
-     * Update user balance
-     */
-    public function updateBalance($id)
+    public function updateBalance($request, $response)
     {
-        $currentUser = $this->user();
+        if (!Auth::check()) {
+            $response->json(['error' => 'Unauthorized'], 401);
+            return;
+        }
+        
+        $id = $request->getParam('id');
+        $currentUser = Auth::user();
         
         // Users can only update their own balance, admins can update any
-        if ($currentUser['role'] !== 'admin' && $currentUser['id'] != $id) {
-            $this->response->json([
-                'error' => true,
-                'message' => 'Acesso negado'
-            ], 403);
+        if ($currentUser['id'] != $id && !User::isAdmin($currentUser)) {
+            $response->json(['error' => 'Forbidden'], 403);
+            return;
         }
-
-        $user = User::find($id);
-        if (!$user) {
-            $this->response->json([
-                'error' => true,
-                'message' => 'Usuário não encontrado'
-            ], 404);
+        
+        try {
+            $data = $request->getJson();
+            
+            $updateData = [];
+            if (isset($data['balance'])) {
+                $updateData['balance'] = $data['balance'];
+            }
+            if (isset($data['bot_balance'])) {
+                $updateData['bot_balance'] = $data['bot_balance'];
+            }
+            
+            $user = User::update($id, $updateData);
+            
+            if (!$user) {
+                $response->json(['error' => 'User not found'], 404);
+                return;
+            }
+            
+            unset($user['password']);
+            $response->json($user);
+        } catch (\Exception $e) {
+            $response->json(['error' => $e->getMessage()], 400);
         }
-
-        $data = [];
-        if ($this->request->has('balance')) {
-            $data['balance'] = $this->request->input('balance');
-        }
-        if ($this->request->has('bot_balance')) {
-            $data['bot_balance'] = $this->request->input('bot_balance');
-        }
-
-        if (empty($data)) {
-            $this->response->json([
-                'error' => true,
-                'message' => 'Nenhum saldo para atualizar'
-            ], 400);
-        }
-
-        $updatedUser = User::update($id, $data);
-
-        $this->response->json($updatedUser);
     }
 }

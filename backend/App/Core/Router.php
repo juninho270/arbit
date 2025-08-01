@@ -2,136 +2,92 @@
 
 namespace App\Core;
 
-/**
- * Simple Router Class
- * Handles URL routing and dispatches requests to controllers
- */
 class Router
 {
     private $routes = [];
     private $middlewares = [];
 
-    /**
-     * Add a GET route
-     */
-    public function get($path, $handler, $middleware = [])
+    public function get($path, $handler, $middlewares = [])
     {
-        $this->addRoute('GET', $path, $handler, $middleware);
+        $this->addRoute('GET', $path, $handler, $middlewares);
     }
 
-    /**
-     * Add a POST route
-     */
-    public function post($path, $handler, $middleware = [])
+    public function post($path, $handler, $middlewares = [])
     {
-        $this->addRoute('POST', $path, $handler, $middleware);
+        $this->addRoute('POST', $path, $handler, $middlewares);
     }
 
-    /**
-     * Add a PUT route
-     */
-    public function put($path, $handler, $middleware = [])
+    public function patch($path, $handler, $middlewares = [])
     {
-        $this->addRoute('PUT', $path, $handler, $middleware);
+        $this->addRoute('PATCH', $path, $handler, $middlewares);
     }
 
-    /**
-     * Add a PATCH route
-     */
-    public function patch($path, $handler, $middleware = [])
+    public function delete($path, $handler, $middlewares = [])
     {
-        $this->addRoute('PATCH', $path, $handler, $middleware);
+        $this->addRoute('DELETE', $path, $handler, $middlewares);
     }
 
-    /**
-     * Add a DELETE route
-     */
-    public function delete($path, $handler, $middleware = [])
-    {
-        $this->addRoute('DELETE', $path, $handler, $middleware);
-    }
-
-    /**
-     * Add a route with any method
-     */
-    private function addRoute($method, $path, $handler, $middleware = [])
+    private function addRoute($method, $path, $handler, $middlewares = [])
     {
         $this->routes[] = [
             'method' => $method,
             'path' => $path,
             'handler' => $handler,
-            'middleware' => $middleware
+            'middlewares' => $middlewares
         ];
     }
 
-    /**
-     * Dispatch the request to the appropriate controller
-     */
     public function dispatch(Request $request, Response $response)
     {
-        $method = $request->getMethod();
-        $path = $request->getPath();
+        $requestMethod = $request->getMethod();
+        $requestPath = $request->getPath();
 
         foreach ($this->routes as $route) {
-            if ($route['method'] === $method && $this->matchPath($route['path'], $path)) {
-                // Extract parameters from URL
-                $params = $this->extractParams($route['path'], $path);
-                
-                // Run middleware
-                foreach ($route['middleware'] as $middleware) {
-                    $middlewareClass = "App\\Middleware\\{$middleware}";
-                    if (class_exists($middlewareClass)) {
-                        $middlewareInstance = new $middlewareClass();
-                        if (!$middlewareInstance->handle($request, $response)) {
-                            return; // Middleware blocked the request
-                        }
-                    }
+            if ($route['method'] === $requestMethod && $this->matchPath($route['path'], $requestPath)) {
+                // Extract parameters from path
+                $params = $this->extractParams($route['path'], $requestPath);
+                $request->setParams($params);
+
+                // Check middlewares
+                if (!$this->checkMiddlewares($route['middlewares'], $request, $response)) {
+                    return;
                 }
 
-                // Call the handler
-                if (is_callable($route['handler'])) {
-                    // Closure handler
-                    call_user_func_array($route['handler'], [$request, $response] + $params);
-                } elseif (is_string($route['handler'])) {
-                    // Controller@method handler
-                    $this->callController($route['handler'], $request, $response, $params);
+                // Handle the route
+                if (is_string($route['handler'])) {
+                    $this->handleStringRoute($route['handler'], $request, $response);
+                } elseif (is_callable($route['handler'])) {
+                    call_user_func($route['handler'], $request, $response);
                 }
                 return;
             }
         }
 
-        // No route found
-        if (strpos($path, '/api/') === 0) {
+        // Route not found
+        if (strpos($requestPath, '/api/') === 0) {
             $response->json(['error' => 'Route not found'], 404);
         } else {
-            http_response_code(404);
-            echo "<h1>404 - Page Not Found</h1>";
+            $response->send('404 - Page not found', 404);
         }
     }
 
-    /**
-     * Check if the route path matches the request path
-     */
     private function matchPath($routePath, $requestPath)
     {
-        // Convert route parameters to regex
+        // Convert route path to regex pattern
         $pattern = preg_replace('/\{([^}]+)\}/', '([^/]+)', $routePath);
         $pattern = '#^' . $pattern . '$#';
         
         return preg_match($pattern, $requestPath);
     }
 
-    /**
-     * Extract parameters from URL
-     */
     private function extractParams($routePath, $requestPath)
     {
         $params = [];
         
-        // Find parameter names in route
+        // Extract parameter names from route path
         preg_match_all('/\{([^}]+)\}/', $routePath, $paramNames);
         
-        // Extract values from request path
+        // Extract parameter values from request path
         $pattern = preg_replace('/\{([^}]+)\}/', '([^/]+)', $routePath);
         $pattern = '#^' . $pattern . '$#';
         
@@ -148,26 +104,43 @@ class Router
         return $params;
     }
 
-    /**
-     * Call a controller method
-     */
-    private function callController($handler, Request $request, Response $response, $params = [])
+    private function checkMiddlewares($middlewares, Request $request, Response $response)
+    {
+        foreach ($middlewares as $middleware) {
+            if ($middleware === 'auth') {
+                if (!Auth::check()) {
+                    $response->json(['error' => 'Unauthorized'], 401);
+                    return false;
+                }
+            } elseif ($middleware === 'admin') {
+                if (!Auth::check() || !Auth::user()->isAdmin()) {
+                    $response->json(['error' => 'Forbidden'], 403);
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private function handleStringRoute($handler, Request $request, Response $response)
     {
         list($controllerName, $method) = explode('@', $handler);
         
-        $controllerClass = "App\\Controllers\\{$controllerName}";
-        
-        if (!class_exists($controllerClass)) {
-            throw new \Exception("Controller {$controllerClass} not found");
+        // Add App\Controllers namespace if not present
+        if (strpos($controllerName, '\\') === false) {
+            $controllerName = 'App\\Controllers\\' . $controllerName;
         }
-        
-        $controller = new $controllerClass($request, $response);
+
+        if (!class_exists($controllerName)) {
+            throw new \Exception("Controller {$controllerName} not found");
+        }
+
+        $controller = new $controllerName();
         
         if (!method_exists($controller, $method)) {
-            throw new \Exception("Method {$method} not found in {$controllerClass}");
+            throw new \Exception("Method {$method} not found in {$controllerName}");
         }
-        
-        // Call the method with parameters
-        call_user_func_array([$controller, $method], $params);
+
+        $controller->$method($request, $response);
     }
 }

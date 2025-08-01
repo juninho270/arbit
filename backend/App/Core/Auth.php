@@ -2,132 +2,79 @@
 
 namespace App\Core;
 
-/**
- * Authentication Class
- * Handles user authentication and session management
- */
+use App\Models\User;
+
 class Auth
 {
     private static $user = null;
 
-    /**
-     * Attempt to authenticate user
-     */
     public static function attempt($email, $password)
     {
-        $userModel = new \App\Models\User();
-        $user = $userModel::whereFirst('email', $email);
+        $user = User::findByEmail($email);
         
         if ($user && password_verify($password, $user['password'])) {
-            // Update last login
-            $userModel::update($user['id'], ['last_login' => date('Y-m-d H:i:s')]);
-            
-            // Store user in session
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['user'] = $user;
-            
             self::$user = $user;
+            $_SESSION['user_id'] = $user['id'];
             return true;
         }
         
         return false;
     }
 
-    /**
-     * Login user by ID (for admin impersonation)
-     */
-    public static function loginById($userId)
-    {
-        $userModel = new \App\Models\User();
-        $user = $userModel::find($userId);
-        
-        if ($user) {
-            // Update last login
-            $userModel::update($user['id'], ['last_login' => date('Y-m-d H:i:s')]);
-            
-            // Store user in session
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['user'] = $user;
-            
-            self::$user = $user;
-            return true;
-        }
-        
-        return false;
-    }
-
-    /**
-     * Get authenticated user
-     */
-    public static function user()
+    public static function check()
     {
         if (self::$user) {
-            return self::$user;
+            return true;
         }
         
-        if (isset($_SESSION['user'])) {
-            self::$user = $_SESSION['user'];
-            return self::$user;
+        // Check session
+        if (isset($_SESSION['user_id'])) {
+            self::$user = User::find($_SESSION['user_id']);
+            return self::$user !== null;
         }
         
-        // Try to authenticate via bearer token (for API requests)
+        // Check Bearer token
         $request = new Request();
-        $token = $request->bearerToken();
+        $token = $request->getBearerToken();
         
         if ($token) {
-            // In a real implementation, you would verify the JWT token here
-            // For now, we'll use a simple token-based auth
-            $userModel = new \App\Models\User();
-            $user = $userModel::whereFirst('remember_token', $token);
-            
-            if ($user) {
-                self::$user = $user;
-                return self::$user;
+            // In a real app, you'd validate the JWT token here
+            // For now, we'll use a simple token format: user_id
+            if (is_numeric($token)) {
+                self::$user = User::find($token);
+                return self::$user !== null;
             }
         }
         
-        return null;
+        return false;
     }
 
-    /**
-     * Check if user is authenticated
-     */
-    public static function check()
+    public static function user()
     {
-        return self::user() !== null;
+        if (!self::check()) {
+            return null;
+        }
+        
+        return self::$user;
     }
 
-    /**
-     * Logout user
-     */
+    public static function id()
+    {
+        $user = self::user();
+        return $user ? $user['id'] : null;
+    }
+
     public static function logout()
     {
         self::$user = null;
         unset($_SESSION['user_id']);
-        unset($_SESSION['user']);
         session_destroy();
     }
 
-    /**
-     * Generate API token for user
-     */
     public static function generateToken($userId)
     {
-        $token = bin2hex(random_bytes(32));
-        
-        // Store token in database
-        $userModel = new \App\Models\User();
-        $userModel::update($userId, ['remember_token' => $token]);
-        
-        return $token;
-    }
-
-    /**
-     * Check if user is admin
-     */
-    public static function isAdmin()
-    {
-        $user = self::user();
-        return $user && $user['role'] === 'admin';
+        // In a real app, you'd generate a proper JWT token
+        // For now, we'll use a simple format
+        return base64_encode($userId . ':' . time());
     }
 }

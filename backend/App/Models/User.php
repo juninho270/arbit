@@ -2,91 +2,74 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
+use App\Core\Model;
 
-class User extends Authenticatable
+class User extends Model
 {
-    use HasApiTokens, HasFactory, Notifiable;
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'balance',
-        'bot_balance',
-        'role',
-        'status',
-        'last_login',
-    ];
-
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
-
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-        'last_login' => 'datetime',
-        'balance' => 'decimal:2',
-        'bot_balance' => 'decimal:2',
-        'password' => 'hashed',
-    ];
-
-    /**
-     * Get the arbitrage operations for the user.
-     */
-    public function arbitrageOperations()
+    public static function findByEmail($email)
     {
-        return $this->hasMany(ArbitrageOperation::class);
+        return self::fetchOne('SELECT * FROM users WHERE email = ?', [$email]);
     }
 
-    /**
-     * Get the bot settings for the user.
-     */
-    public function botSettings()
+    public static function find($id)
     {
-        return $this->hasOne(BotSettings::class);
+        return self::fetchOne('SELECT * FROM users WHERE id = ?', [$id]);
     }
 
-    /**
-     * Get the investments for the user.
-     */
-    public function investments()
+    public static function all()
     {
-        return $this->hasMany(Investment::class);
+        return self::fetchAll('SELECT * FROM users ORDER BY created_at DESC');
     }
 
-    /**
-     * Check if user is admin.
-     */
-    public function isAdmin(): bool
+    public static function create($data)
     {
-        return $this->role === 'admin';
+        $sql = 'INSERT INTO users (name, email, password, balance, bot_balance, role, status, created_at, updated_at) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
+        
+        $params = [
+            $data['name'],
+            $data['email'],
+            password_hash($data['password'], PASSWORD_DEFAULT),
+            $data['balance'] ?? 0,
+            $data['bot_balance'] ?? 0,
+            $data['role'] ?? 'user',
+            $data['status'] ?? 'active'
+        ];
+        
+        self::execute($sql, $params);
+        return self::find(self::lastInsertId());
     }
 
-    /**
-     * Check if user is active.
-     */
-    public function isActive(): bool
+    public static function update($id, $data)
     {
-        return $this->status === 'active';
+        $fields = [];
+        $params = [];
+        
+        foreach ($data as $key => $value) {
+            if (in_array($key, ['name', 'email', 'balance', 'bot_balance', 'role', 'status'])) {
+                $fields[] = "$key = ?";
+                $params[] = $value;
+            }
+        }
+        
+        if (empty($fields)) {
+            return self::find($id);
+        }
+        
+        $params[] = $id;
+        $sql = 'UPDATE users SET ' . implode(', ', $fields) . ', updated_at = NOW() WHERE id = ?';
+        
+        self::execute($sql, $params);
+        return self::find($id);
+    }
+
+    public static function delete($id)
+    {
+        return self::execute('DELETE FROM users WHERE id = ?', [$id]);
+    }
+
+    public static function isAdmin($user)
+    {
+        return isset($user['role']) && $user['role'] === 'admin';
     }
 }
