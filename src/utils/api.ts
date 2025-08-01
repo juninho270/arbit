@@ -26,10 +26,11 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // Let components handle 401 errors themselves
+    // Only clear storage if it's not a login attempt
+    if (error.response?.status === 401 && !error.config?.url?.includes('/login')) {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user');
-      window.location.href = '/';
     }
     return Promise.reject(error);
   }

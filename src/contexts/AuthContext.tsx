@@ -48,8 +48,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setAllUsers(users);
         }
       } catch (error) {
+        console.log('Token validation failed, logging out...');
         localStorage.removeItem('auth_token');
         localStorage.removeItem('user');
+        setUser(null);
+        setAllUsers([]);
       }
     }
     setIsLoading(false);

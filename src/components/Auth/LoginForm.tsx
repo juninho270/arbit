@@ -15,10 +15,15 @@ const LoginForm: React.FC = () => {
     setIsLoading(true);
     setError('');
 
-    const success = await login(email, password);
-    
-    if (!success) {
-      setError('Credenciais inválidas');
+    try {
+      const success = await login(email, password);
+      
+      if (!success) {
+        setError('Credenciais inválidas');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setError('Erro ao fazer login. Tente novamente.');
     }
     
     setIsLoading(false);
