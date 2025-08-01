@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($title ?? 'CryptoArb Pro'); ?></title>
-    <link rel="stylesheet" href="/api/assets/css/style.css">
+    <link rel="stylesheet" href="/assets/css/style.css">
     <link rel="icon" type="image/svg+xml" href="/api/assets/favicon.ico">
 </head>
 <body>
@@ -160,7 +160,7 @@
         </main>
     </div>
 
-    <script src="/api/assets/js/app.js"></script>
+    <script src="/assets/js/app.js"></script>
     <?php if (isset($additionalScripts)): ?>
         <?php foreach ($additionalScripts as $script): ?>
             <script src="<?php echo htmlspecialchars($script); ?>"></script>

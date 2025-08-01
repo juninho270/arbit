@@ -3,7 +3,7 @@
 
 RewriteEngine On
 
-# Redirecionar todas as requisições para index.php
+# Redirecionar todas as requisições para index.php (exceto arquivos existentes)
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php [QSA,L]
@@ -16,11 +16,9 @@ RewriteRule ^(.*)$ index.php [QSA,L]
     Header always set X-XSS-Protection "1; mode=block"
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
     
-    # CORS para API (ajuste conforme necessário)
-    Header always set Access-Control-Allow-Origin "http://localhost:5173"
+    # Headers para API (se necessário)
     Header always set Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
     Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
-    Header always set Access-Control-Allow-Credentials "true"
 </IfModule>
 
 # Configurações de cache para arquivos estáticos

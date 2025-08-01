@@ -5,8 +5,19 @@
  * Define routes for web interface
  */
 
-// Home page
-$router->get('/', 'WebAuthController@showLogin');
+// Home page - redireciona para dashboard se logado, senão para login
+$router->get('/', function($request, $response) {
+    if (Auth::check()) {
+        $user = Auth::user();
+        if (User::isAdmin($user)) {
+            $response->redirect('/admin');
+        } else {
+            $response->redirect('/dashboard');
+        }
+    } else {
+        $response->redirect('/login');
+    }
+});
 
 // Authentication routes
 $router->get('/login', 'WebAuthController@showLogin');
