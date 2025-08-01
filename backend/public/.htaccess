@@ -1,12 +1,24 @@
-# Configuração do Apache para o diretório public
-# Este arquivo garante que todas as requisições sejam direcionadas para index.php
+# Configuração do Apache para Single Page Application (React)
+# Este arquivo garante que o React Router funcione corretamente
 
 RewriteEngine On
 
-# Redirecionar todas as requisições para index.php (exceto arquivos existentes)
+# Servir arquivos estáticos diretamente (CSS, JS, imagens, etc.)
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# Servir diretórios existentes diretamente
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Rotas da API devem ser processadas pelo PHP
+RewriteCond %{REQUEST_URI} ^/api/
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+# Todas as outras rotas (React Router) devem servir o index.html
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ index.php [QSA,L]
+RewriteRule ^ index.html [L]
 
 # Configurações de segurança
 <IfModule mod_headers.c>
@@ -16,7 +28,8 @@ RewriteRule ^(.*)$ index.php [QSA,L]
     Header always set X-XSS-Protection "1; mode=block"
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
     
-    # Headers para API (se necessário)
+    # Headers CORS para API
+    Header always set Access-Control-Allow-Origin "*"
     Header always set Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
     Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
 </IfModule>
@@ -31,6 +44,7 @@ RewriteRule ^(.*)$ index.php [QSA,L]
     ExpiresByType image/jpeg "access plus 1 month"
     ExpiresByType image/gif "access plus 1 month"
     ExpiresByType image/svg+xml "access plus 1 month"
+    ExpiresByType application/json "access plus 0 seconds"
 </IfModule>
 
 # Bloquear acesso a arquivos sensíveis

@@ -8,6 +8,11 @@ class Router
     private $routes = [];
     private $middlewares = [];
 
+    public function any($path, $handler, $middlewares = [])
+    {
+        $this->addRoute('*', $path, $handler, $middlewares);
+    }
+
     public function get($path, $handler, $middlewares = [])
     {
         $this->addRoute('GET', $path, $handler, $middlewares);
@@ -44,7 +49,10 @@ class Router
         $requestPath = $request->getPath();
 
         foreach ($this->routes as $route) {
-            if ($route['method'] === $requestMethod && $this->matchPath($route['path'], $requestPath)) {
+            // Check if method matches (or if route accepts any method)
+            $methodMatches = ($route['method'] === $requestMethod || $route['method'] === '*');
+            
+            if ($methodMatches && $this->matchPath($route['path'], $requestPath)) {
                 // Extract parameters from path
                 $params = $this->extractParams($route['path'], $requestPath);
                 $request->setParams($params);
@@ -75,8 +83,15 @@ class Router
     private function matchPath($routePath, $requestPath)
     {
         // Convert route path to regex pattern
-        $pattern = preg_replace('/\{([^}]+)\}/', '([^/]+)', $routePath);
+        // Handle special wildcard pattern {path:.*}
+        if (strpos($routePath, '{path:.*}') !== false) {
+            $pattern = str_replace('{path:.*}', '(.*)', $routePath);
+        } else {
+            // Handle normal parameters {param}
+            $pattern = preg_replace('/\{([^}]+)\}/', '([^/]+)', $routePath);
+        }
         $pattern = '#^' . $pattern . '$#';
+        
         
         return preg_match($pattern, $requestPath);
     }
@@ -85,8 +100,15 @@ class Router
     {
         $params = [];
         
-        // Extract parameter names from route path
-        preg_match_all('/\{([^}]+)\}/', $routePath, $paramNames);
+        // Handle special wildcard pattern {path:.*}
+        if (strpos($routePath, '{path:.*}') !== false) {
+            $pattern = str_replace('{path:.*}', '(.*)', $routePath);
+            $paramNames = [['path:.*'], ['path']];
+        } else {
+            // Extract parameter names from route path
+            preg_match_all('/\{([^}]+)\}/', $routePath, $paramNames);
+        }
+        
         
         // Extract parameter values from request path
         $pattern = preg_replace('/\{([^}]+)\}/', '([^/]+)', $routePath);
@@ -96,8 +118,13 @@ class Router
             array_shift($matches); // Remove full match
             
             foreach ($paramNames[1] as $index => $paramName) {
+                // Handle wildcard parameter
+                if ($paramName === 'path') {
+                    $params[$paramName] = isset($matches[$index]) ? $matches[$index] : '';
+                } else {
                 if (isset($matches[$index])) {
                     $params[$paramName] = $matches[$index];
+                    }
                 }
             }
         }
