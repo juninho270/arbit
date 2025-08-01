@@ -3,19 +3,6 @@
 
 RewriteEngine On
 
-# Bloquear acesso direto a arquivos PHP que não sejam o index.php
-<Files "*.php">
-    <RequireAll>
-        Require all denied
-        Require local
-    </RequireAll>
-</Files>
-
-# Permitir acesso apenas ao index.php
-<Files "index.php">
-    Require all granted
-</Files>
-
 # Redirecionar todas as requisições para index.php
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d

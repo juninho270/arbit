@@ -25,11 +25,6 @@ RewriteRule ^(.*)$ public/index.php [QSA,L]
     Require all denied
 </FilesMatch>
 
-# Bloquear acesso a diretórios do sistema
-<DirectoryMatch "/(app|config|database|storage)/">
-    Require all denied
-</DirectoryMatch>
-
 # Bloquear listagem de diretórios
 Options -Indexes
 

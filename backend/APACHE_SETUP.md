@@ -4,12 +4,21 @@ Este guia explica como configurar o Apache para servir corretamente a aplicaçã
 
 ## 🚨 Problema Atual
 
-O erro que você está enfrentando:
+Os erros que você pode estar enfrentando:
+
+### Erro 1: DirectoryIndex não encontrado
 ```
 AH01276: Cannot serve directory /var/www/vhosts/arbit.duckdns.org/httpdocs/: No matching DirectoryIndex found
 ```
 
 Indica que o Apache não consegue encontrar o arquivo `index.php` porque está procurando no diretório errado.
+
+### Erro 2: DirectoryMatch não permitido
+```
+<DirectoryMatch not allowed here
+```
+
+Indica que algumas diretivas não são permitidas em arquivos `.htaccess`.
 
 ## ✅ Solução
 
@@ -43,6 +52,18 @@ sudo apache2ctl configtest
 
 # 5. Reiniciar o Apache
 sudo systemctl restart apache2
+```
+
+### 3. Verificar Permissões dos Arquivos .htaccess
+
+```bash
+# Verificar se os arquivos .htaccess existem e têm as permissões corretas
+ls -la /var/www/vhosts/arbit.duckdns.org/httpdocs/backend/.htaccess
+ls -la /var/www/vhosts/arbit.duckdns.org/httpdocs/backend/public/.htaccess
+
+# Definir permissões corretas se necessário
+chmod 644 /var/www/vhosts/arbit.duckdns.org/httpdocs/backend/.htaccess
+chmod 644 /var/www/vhosts/arbit.duckdns.org/httpdocs/backend/public/.htaccess
 ```
 
 ### 3. Estrutura de Arquivos Esperada
