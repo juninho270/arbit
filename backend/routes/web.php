@@ -51,13 +51,8 @@ $router->post('/investments/create', 'InvestmentController@create', ['auth']);
 $router->get('/settings', 'SettingsController@index', ['auth']);
 $router->post('/settings/update', 'SettingsController@update', ['auth']);
 
-// Admin routes (protected by admin middleware)
-$router->get('/admin', 'AdminController@index', ['auth', 'admin']);
-$router->get('/admin/users', 'AdminController@users', ['auth', 'admin']);
-$router->post('/admin/users/create', 'AdminController@createUser', ['auth', 'admin']);
-$router->post('/admin/users/{id}/update', 'AdminController@updateUser', ['auth', 'admin']);
-$router->post('/admin/users/{id}/delete', 'AdminController@deleteUser', ['auth', 'admin']);
-$router->post('/admin/login-as/{id}', 'AdminController@loginAsUser', ['auth', 'admin']);
+// Admin routes removidas - o frontend React gerencia as rotas /admin
+// As APIs de admin estão disponíveis em /api/admin/*
 
 // Health check
 $router->get('/health', function($request, $response) {
