@@ -14,42 +14,57 @@ $router->get('/', function($request, $response) {
     if (Auth::check()) {
         $user = Auth::user();
         if (User::isAdmin($user)) {
-            $response->redirect('/admin');
+            // Para admin, servir o React app que gerencia /admin
+            $response->redirect('/#/admin');
         } else {
-            $response->redirect('/dashboard');
+            // Para usuário, servir o React app que gerencia /dashboard  
+            $response->redirect('/#/');
         }
     } else {
-        $response->redirect('/login');
+        // Para não logado, servir o React app que gerencia login
+        $response->redirect('/#/login');
     }
 });
 
-// Authentication routes
-$router->get('/login', 'WebAuthController@showLogin');
-$router->post('/login', 'WebAuthController@login');
-$router->get('/logout', 'WebAuthController@logout');
-$router->post('/logout', 'WebAuthController@logout');
+// Serve React app for all non-API routes
+$router->get('/admin', function($request, $response) {
+    $response->redirect('/#/admin');
+});
 
-// Dashboard routes (protected)
-$router->get('/dashboard', 'DashboardController@index', ['auth']);
+$router->get('/dashboard', function($request, $response) {
+    $response->redirect('/#/');
+});
 
-// Market routes
-$router->get('/market', 'MarketController@index', ['auth']);
+$router->get('/market', function($request, $response) {
+    $response->redirect('/#/market');
+});
 
-// Arbitrage routes
-$router->get('/arbitrage', 'ArbitrageController@showManual', ['auth']);
-$router->post('/arbitrage/execute', 'ArbitrageController@executeManual', ['auth']);
+$router->get('/arbitrage', function($request, $response) {
+    $response->redirect('/#/arbitrage');
+});
 
-// Bot routes
-$router->get('/bot', 'BotController@index', ['auth']);
-$router->post('/bot/settings', 'BotController@updateSettings', ['auth']);
+$router->get('/bot', function($request, $response) {
+    $response->redirect('/#/bot');
+});
 
-// Investment routes
-$router->get('/investments', 'InvestmentController@index', ['auth']);
-$router->post('/investments/create', 'InvestmentController@create', ['auth']);
+$router->get('/investments', function($request, $response) {
+    $response->redirect('/#/investments');
+});
 
-// Settings routes
-$router->get('/settings', 'SettingsController@index', ['auth']);
-$router->post('/settings/update', 'SettingsController@update', ['auth']);
+$router->get('/settings', function($request, $response) {
+    $response->redirect('/#/settings');
+});
+
+// Catch-all route for React Router (SPA)
+$router->get('/{path}', function($request, $response) {
+    // Serve the React app index.html for any non-API route
+    $indexPath = PUBLIC_PATH . '/index.html';
+    if (file_exists($indexPath)) {
+        $response->send(file_get_contents($indexPath));
+    } else {
+        $response->send('React app not found', 404);
+    }
+});
 
 // Admin routes removidas - o frontend React gerencia as rotas /admin
 // As APIs de admin estão disponíveis em /api/admin/*
