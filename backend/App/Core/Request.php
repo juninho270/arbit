@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Core;
- 
+
 class Request
 {
     private $params = [];
