@@ -5,6 +5,9 @@
  * Todas as rotas da aplicação web
  */
 
+use App\Core\Auth;
+use App\Models\User;
+
 // Rota raiz - redireciona baseado na autenticação
 $router->get('/', function($request, $response) {
     if (Auth::check()) {

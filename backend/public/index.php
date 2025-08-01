@@ -52,6 +52,7 @@ require_once APP_PATH . '/Core/Auth.php';
 
 // Load models that are used in routes
 require_once APP_PATH . '/Models/User.php';
+require_once APP_PATH . '/Models/ArbitrageOperation.php';
 
 // Initialize core components
 $request = new App\Core\Request();
