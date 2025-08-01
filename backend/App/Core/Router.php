@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Core;
+use App\Models\User;
 
 class Router
 {
@@ -113,7 +114,7 @@ class Router
                     return false;
                 }
             } elseif ($middleware === 'admin') {
-                if (!Auth::check() || !Auth::user()->isAdmin()) {
+                if (!Auth::check() || !User::isAdmin(Auth::user())) {
                     $response->json(['error' => 'Forbidden'], 403);
                     return false;
                 }
