@@ -5,6 +5,10 @@
  * Define routes for web interface
  */
 
+// Import required classes
+use App\Core\Auth;
+use App\Models\User;
+
 // Home page - redireciona para dashboard se logado, senão para login
 $router->get('/', function($request, $response) {
     if (Auth::check()) {

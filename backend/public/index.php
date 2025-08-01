@@ -43,6 +43,9 @@ require_once APP_PATH . '/Core/Request.php';
 require_once APP_PATH . '/Core/Response.php';
 require_once APP_PATH . '/Core/Auth.php';
 
+// Load models that are used in routes
+require_once APP_PATH . '/Models/User.php';
+
 // Initialize core components
 $request = new App\Core\Request();
 $response = new App\Core\Response();
