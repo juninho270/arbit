@@ -20,9 +20,9 @@ class AdminController extends Controller
         
         // Estatísticas do sistema
         $stats = [
-            'total_users' => count(User::all()),
-            'active_users' => count(User::where('status', 'active')),
-            'total_operations' => ArbitrageOperation::count(),
+            'total_users' => User::countAll(),
+            'active_users' => count(User::getByStatus('active')),
+            'total_operations' => ArbitrageOperation::countAll(),
             'total_volume' => ArbitrageOperation::getTotalVolume(),
             'total_profit' => ArbitrageOperation::getTotalProfit(),
             'system_status' => 'online'
