@@ -31,6 +31,13 @@ spl_autoload_register(function ($class) {
     }
 });
 
+// Load environment variables from .env file
+require_once APP_PATH . '/Core/DotEnvLoader.php';
+$envPath = APP_ROOT . '/.env';
+if (file_exists($envPath)) {
+    \App\Core\DotEnvLoader::load($envPath);
+}
+
 // Load configuration
 require_once CONFIG_PATH . '/app.php';
 require_once CONFIG_PATH . '/database.php';
