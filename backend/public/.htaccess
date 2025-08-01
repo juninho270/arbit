@@ -18,7 +18,7 @@ RewriteRule ^(.*)$ index.php [QSA,L]
 # Todas as outras rotas (React Router) devem servir o index.html
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^ index.php [QSA,L]
+RewriteRule ^ index.html [L]
 
 # Configurações de segurança
 <IfModule mod_headers.c>

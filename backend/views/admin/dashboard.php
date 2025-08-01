@@ -3,7 +3,7 @@ $title = 'Painel Administrativo - CryptoArb Pro';
 $currentPage = 'admin';
 ?>
 
-<div class="fade-in admin-container">
+<div class="fade-in">
     <!-- Stats Grid -->
     <div class="stats-grid">
         <div class="stat-card">
@@ -61,20 +61,20 @@ $currentPage = 'admin';
             <h2 class="card-title">Status do Sistema</h2>
         </div>
         <div class="card-body">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-                <div class="status-indicator online">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
                     <div class="status-dot"></div>
-                    <span style="color: #f1f5f9;">Sistema Principal</span>
+                    <span style="color: #E6E6E6;">Sistema Principal</span>
                     <span class="text-success">ONLINE</span>
                 </div>
-                <div class="status-indicator online">
+                <div style="display: flex; align-items: center; gap: 12px;">
                     <div class="status-dot"></div>
-                    <span style="color: #f1f5f9;">API Externa</span>
+                    <span style="color: #E6E6E6;">API Externa</span>
                     <span class="text-success">ONLINE</span>
                 </div>
-                <div class="status-indicator online">
+                <div style="display: flex; align-items: center; gap: 12px;">
                     <div class="status-dot"></div>
-                    <span style="color: #f1f5f9;">Banco de Dados</span>
+                    <span style="color: #E6E6E6;">Banco de Dados</span>
                     <span class="text-success">ONLINE</span>
                 </div>
             </div>
@@ -87,14 +87,14 @@ $currentPage = 'admin';
             <h2 class="card-title">Atividade Recente</h2>
         </div>
         <div class="card-body">
-            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <div style="display: flex; flex-direction: column; gap: 16px;">
                 <?php foreach ($recentActivity as $activity): ?>
-                    <div class="activity-item">
-                        <div class="activity-dot"></div>
-                        <div class="activity-content">
-                            <p class="activity-message"><?php echo htmlspecialchars($activity['message']); ?></p>
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px; background-color: #0D0D0D; border-radius: 8px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 8px; height: 8px; background-color: #32FF7E; border-radius: 50%;"></div>
+                            <span style="color: #E6E6E6;"><?php echo htmlspecialchars($activity['message']); ?></span>
                         </div>
-                        <span class="activity-time"><?php echo htmlspecialchars($activity['time']); ?></span>
+                        <span style="color: #A6A6A6; font-size: 14px;"><?php echo htmlspecialchars($activity['time']); ?></span>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -107,22 +107,22 @@ $currentPage = 'admin';
             <h2 class="card-title">Ações Rápidas</h2>
         </div>
         <div class="card-body">
-            <div class="quick-actions">
-                <a href="/admin/users" class="quick-action">
-                    <span class="quick-action-icon">👥</span>
-                    <span class="quick-action-text">Gerenciar Usuários</span>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                <a href="/admin/users" class="btn btn-primary">
+                    <span>👥</span>
+                    <span>Gerenciar Usuários</span>
                 </a>
-                <a href="/admin/operations" class="quick-action">
-                    <span class="quick-action-icon">📊</span>
-                    <span class="quick-action-text">Ver Operações</span>
+                <a href="/admin/operations" class="btn btn-secondary">
+                    <span>📊</span>
+                    <span>Ver Operações</span>
                 </a>
-                <a href="/admin/cryptos" class="quick-action">
-                    <span class="quick-action-icon">₿</span>
-                    <span class="quick-action-text">Criptomoedas</span>
+                <a href="/admin/cryptos" class="btn btn-secondary">
+                    <span>₿</span>
+                    <span>Criptomoedas</span>
                 </a>
-                <a href="/admin/settings" class="quick-action">
-                    <span class="quick-action-icon">⚙️</span>
-                    <span class="quick-action-text">Configurações</span>
+                <a href="/admin/settings" class="btn btn-secondary">
+                    <span>⚙️</span>
+                    <span>Configurações</span>
                 </a>
             </div>
         </div>

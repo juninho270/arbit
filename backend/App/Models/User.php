@@ -72,15 +72,4 @@ class User extends Model
     {
         return isset($user['role']) && $user['role'] === 'admin';
     }
-
-    public static function getByStatus($status)
-    {
-        return self::fetchAll('SELECT * FROM users WHERE status = ? ORDER BY created_at DESC', [$status]);
-    }
-
-    public static function countAll()
-    {
-        $result = self::fetchOne('SELECT COUNT(*) as count FROM users');
-        return $result['count'] ?? 0;
-    }
 }

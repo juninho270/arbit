@@ -89,32 +89,4 @@ class ArbitrageOperation extends Model
         self::execute($sql, $params);
         return self::find($id);
     }
-
-    public static function countAll()
-    {
-        $result = self::fetchOne('SELECT COUNT(*) as count FROM arbitrage_operations');
-        return $result['count'] ?? 0;
-    }
-
-    public static function getTotalVolume()
-    {
-        $result = self::fetchOne('SELECT COALESCE(SUM(amount), 0) as total_volume FROM arbitrage_operations WHERE status = "completed"');
-        return $result['total_volume'] ?? 0;
-    }
-
-    public static function getTotalProfit()
-    {
-        $result = self::fetchOne('SELECT COALESCE(SUM(profit), 0) as total_profit FROM arbitrage_operations WHERE status = "completed"');
-        return $result['total_profit'] ?? 0;
-    }
-
-    public static function getAllWithUsers()
-    {
-        return self::fetchAll('
-            SELECT ao.*, u.name as user_name, u.email as user_email 
-            FROM arbitrage_operations ao 
-            LEFT JOIN users u ON ao.user_id = u.id 
-            ORDER BY ao.created_at DESC
-        ');
-    }
 }
