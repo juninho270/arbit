@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Core;
-
+ 
 class Request
 {
     private $params = [];
@@ -13,11 +13,26 @@ class Request
 
     public function getPath()
     {
-        $path = $_SERVER['REQUEST_URI'];
+        $requestUri = $_SERVER['REQUEST_URI'];
         
         // Remove query string
-        if (($pos = strpos($path, '?')) !== false) {
-            $path = substr($path, 0, $pos);
+        if (($pos = strpos($requestUri, '?')) !== false) {
+            $requestUri = substr($requestUri, 0, $pos);
+        }
+        
+        // Get the script directory (e.g., /backend/public)
+        $scriptDir = dirname($_SERVER['SCRIPT_NAME']);
+        
+        // Remove the script directory from the request URI to get clean path
+        if ($scriptDir !== '/' && strpos($requestUri, $scriptDir) === 0) {
+            $path = substr($requestUri, strlen($scriptDir));
+        } else {
+            $path = $requestUri;
+        }
+        
+        // Ensure path starts with /
+        if (empty($path) || $path[0] !== '/') {
+            $path = '/' . $path;
         }
         
         return $path;
