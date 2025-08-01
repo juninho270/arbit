@@ -83,4 +83,25 @@ class Request
     {
         return $_POST[$name] ?? $default;
     }
+
+    public function isPost()
+    {
+        return $this->getMethod() === 'POST';
+    }
+
+    public function isGet()
+    {
+        return $this->getMethod() === 'GET';
+    }
+
+    public function isAjax()
+    {
+        return $this->getHeader('X-Requested-With') === 'XMLHttpRequest';
+    }
+
+    public function wantsJson()
+    {
+        $accept = $this->getHeader('Accept');
+        return $accept && strpos($accept, 'application/json') !== false;
+    }
 }

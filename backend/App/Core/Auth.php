@@ -38,10 +38,13 @@ class Auth
         $token = $request->getBearerToken();
         
         if ($token) {
-            // In a real app, you'd validate the JWT token here
-            // For now, we'll use a simple token format: user_id
-            if (is_numeric($token)) {
-                self::$user = User::find($token);
+            // Decode the token (base64 encoded user_id:timestamp)
+            $decoded = base64_decode($token);
+            if ($decoded && strpos($decoded, ':') !== false) {
+                list($userId, $timestamp) = explode(':', $decoded, 2);
+                if (is_numeric($userId)) {
+                    self::$user = User::find($userId);
+                }
                 return self::$user !== null;
             }
         }
