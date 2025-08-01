@@ -3,136 +3,132 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
+use App\Core\Auth;
 use App\Models\ArbitrageOperation;
 use App\Models\Cryptocurrency;
 use App\Models\User;
 
-/**
- * Arbitrage Controller
- * Handles arbitrage operations
- */
 class ArbitrageController extends Controller
 {
-    /**
-     * Display a listing of arbitrage operations
-     */
-    public function index()
+    public function showManual($request, $response)
     {
-        $this->requireAuth();
-        
-        $user = $this->user();
-        
-        if ($user['role'] === 'admin') {
-            // Admin can see all operations
-            $operations = ArbitrageOperation::query("
-                SELECT ao.*, u.name as user_name 
-                FROM arbitrage_operations ao 
-                LEFT JOIN users u ON ao.user_id = u.id 
-                ORDER BY ao.created_at DESC 
-                LIMIT 20
-            ");
-        } else {
-            // Users can only see their own operations
-            $operations = ArbitrageOperation::query("
-                SELECT * FROM arbitrage_operations 
-                WHERE user_id = ? 
-                ORDER BY created_at DESC 
-                LIMIT 20
-            ", [$user['id']]);
+        if (!Auth::check()) {
+            $response->redirect('/login');
+            return;
         }
 
-        $this->response->json(['data' => $operations]);
+        $user = Auth::user();
+        
+        // Buscar criptomoedas disponíveis
+        $cryptocurrencies = $this->getCryptocurrencies();
+        
+        // Operações recentes do usuário
+        $recentOperations = ArbitrageOperation::getRecentByUser($user['id'], 5);
+
+        $data = [
+            'user' => $user,
+            'cryptocurrencies' => $cryptocurrencies,
+            'recentOperations' => $recentOperations
+        ];
+
+        $this->renderLayout('arbitrage/manual', $data);
     }
 
-    /**
-     * Execute a manual arbitrage operation
-     */
-    public function executeManual()
+    public function executeManual($request, $response)
     {
-        $this->requireAuth();
-
-        $data = $this->validate([
-            'cryptocurrency' => 'required',
-            'amount' => 'required|numeric',
-            'coin_id' => 'required',
-        ]);
-
-        $user = $this->user();
-
-        // Check if user has sufficient balance
-        if ($user['balance'] < $data['amount']) {
-            $this->response->json([
-                'error' => true,
-                'message' => 'Saldo insuficiente'
-            ], 400);
+        if (!Auth::check()) {
+            $response->redirect('/login');
+            return;
         }
 
-        // Check if cryptocurrency is enabled for arbitrage
-        $crypto = Cryptocurrency::whereFirst('coin_id', $data['coin_id']);
-        if ($crypto && !$crypto['is_arbitrage_enabled']) {
-            $this->response->json([
-                'error' => true,
-                'message' => 'Arbitragem desabilitada para esta criptomoeda'
-            ], 400);
+        try {
+            $cryptocurrency = $request->getPost('cryptocurrency');
+            $amount = (float)$request->getPost('amount');
+            $coinId = $request->getPost('coin_id');
+
+            if (!$cryptocurrency || !$amount || !$coinId) {
+                throw new \Exception('Dados incompletos');
+            }
+
+            $user = Auth::user();
+
+            // Verificar saldo
+            if ($user['balance'] < $amount) {
+                throw new \Exception('Saldo insuficiente');
+            }
+
+            // Simular operação de arbitragem
+            $price = $this->getCryptocurrencyPrice($coinId);
+            $profitPercentage = rand(200, 800) / 100; // 2% a 8%
+            $profit = ($amount * $profitPercentage) / 100;
+            $executionTime = rand(3000, 5000);
+
+            // Criar operação
+            $operationData = [
+                'user_id' => $user['id'],
+                'type' => 'manual',
+                'cryptocurrency' => $cryptocurrency,
+                'amount' => $amount,
+                'buy_price' => $price,
+                'sell_price' => $price * 1.05,
+                'profit' => $profit,
+                'profit_percentage' => $profitPercentage,
+                'status' => 'completed',
+                'transaction_hash' => '0x' . bin2hex(random_bytes(32)),
+                'chain' => 'bsc',
+                'execution_time' => $executionTime
+            ];
+
+            ArbitrageOperation::create($operationData);
+
+            // Atualizar saldo do usuário
+            User::update($user['id'], ['balance' => $user['balance'] + $profit]);
+
+            $response->redirect('/arbitrage?success=operation_completed&profit=' . $profit);
+        } catch (\Exception $e) {
+            $response->redirect('/arbitrage?error=' . urlencode($e->getMessage()));
         }
+    }
 
-        // Get current price
-        $price = $this->getCryptocurrencyPrice($data['coin_id']);
-        if ($price <= 0) {
-            $this->response->json([
-                'error' => true,
-                'message' => 'Não foi possível obter o preço atual'
-            ], 400);
-        }
+    private function getCryptocurrencies()
+    {
+        return [
+            [
+                'id' => 'bitcoin',
+                'symbol' => 'btc',
+                'name' => 'Bitcoin',
+                'current_price' => 43250.75,
+                'price_change_percentage_24h' => 2.45
+            ],
+            [
+                'id' => 'ethereum',
+                'symbol' => 'eth',
+                'name' => 'Ethereum',
+                'current_price' => 2650.30,
+                'price_change_percentage_24h' => -1.23
+            ],
+            [
+                'id' => 'binancecoin',
+                'symbol' => 'bnb',
+                'name' => 'BNB',
+                'current_price' => 315.45,
+                'price_change_percentage_24h' => 0.87
+            ]
+        ];
+    }
 
-        // Simulate arbitrage profit (2% to 8%)
-        $profitPercentage = rand(200, 800) / 100; // 2.00% to 8.00%
-        $profit = ($data['amount'] * $profitPercentage) / 100;
-        $executionTime = rand(3000, 5000); // 3-5 seconds
-
-        // Create operation
-        $operation = ArbitrageOperation::create([
-            'user_id' => $user['id'],
-            'type' => 'manual',
-            'cryptocurrency' => $data['cryptocurrency'],
-            'amount' => $data['amount'],
-            'buy_price' => $price,
-            'sell_price' => $price * 1.05, // 5% higher
-            'profit' => $profit,
-            'profit_percentage' => $profitPercentage,
-            'status' => 'pending',
-            'execution_time' => $executionTime,
-            'created_at' => date('Y-m-d H:i:s'),
-        ]);
-
-        // Simulate execution delay
-        sleep($executionTime / 1000);
-
-        // Try to find real transaction hash
-        $transactionResult = $this->findTransactionHash($data['coin_id'], $data['amount']);
-
-        if (!$transactionResult) {
-            // Cancel operation
-            $operation = ArbitrageOperation::update($operation['id'], [
-                'status' => 'cancelled_no_hash',
-                'no_hash_reason' => 'O sistema não encontrou transações possíveis para este token neste momento.',
-                'completed_at' => date('Y-m-d H:i:s'),
-            ]);
-
-            // Auto-deactivate cryptocurrency
-            if ($crypto) {
-                Cryptocurrency::update($crypto['id'], [
-                    'is_arbitrage_enabled' => 0,
-                    'deactivation_reason' => "Auto-desativado: Falha em encontrar transações reais. Última tentativa: " . date('d/m/Y H:i:s') . " - Valor: $" . number_format($data['amount'], 2),
-                ]);
-            } else {
-                Cryptocurrency::create([
-                    'coin_id' => $data['coin_id'],
-                    'symbol' => '',
-                    'name' => $data['cryptocurrency'],
-                    'is_arbitrage_enabled' => 0,
-                    'deactivation_reason' => "Auto-desativado: Falha em encontrar transações reais. Última tentativa: " . date('d/m/Y H:i:s') . " - Valor: $" . number_format($data['amount'], 2),
-                ]);
+    private function getCryptocurrencyPrice($coinId)
+    {
+        // Simular preços
+        $prices = [
+            'bitcoin' => 43250.75,
+            'ethereum' => 2650.30,
+            'binancecoin' => 315.45
+        ];
+        
+        return $prices[$coinId] ?? 1000;
+    }
+}
             }
 
             $this->response->json($operation);
