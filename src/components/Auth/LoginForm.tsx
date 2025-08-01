@@ -14,16 +14,45 @@ const LoginForm: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    
+    console.log('🔐 Tentativa de login:', { email });
 
     try {
       const success = await login(email, password);
+      console.log('✅ Resultado do login:', success);
       
       if (!success) {
         setError('Credenciais inválidas');
       }
-    } catch (error) {
-      console.error('Login error:', error);
-      setError('Erro ao fazer login. Tente novamente.');
+    } catch (error: any) {
+      console.error('❌ Erro no login:', error);
+      
+      // Tratar diferentes tipos de erro
+      if (error.response) {
+        const status = error.response.status;
+        const data = error.response.data;
+        
+        console.log('📊 Status do erro:', status);
+        console.log('📋 Dados do erro:', data);
+        
+        if (status === 422 && data.errors) {
+          // Erro de validação do Laravel
+          const firstError = Object.values(data.errors)[0];
+          setError(Array.isArray(firstError) ? firstError[0] : 'Erro de validação');
+        } else if (status === 401) {
+          setError('Email ou senha incorretos');
+        } else if (data.message) {
+          setError(data.message);
+        } else {
+          setError('Erro ao fazer login. Tente novamente.');
+        }
+      } else if (error.request) {
+        console.error('🌐 Erro de rede:', error.request);
+        setError('Erro de conexão. Verifique sua internet.');
+      } else {
+        console.error('⚠️ Erro desconhecido:', error.message);
+        setError('Erro inesperado. Tente novamente.');
+      }
     }
     
     setIsLoading(false);

@@ -18,6 +18,9 @@ api.interceptors.request.use((config) => {
   const token = localStorage.getItem('auth_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+    console.log('🎫 Token adicionado à requisição:', config.url);
+  } else {
+    console.log('❌ Nenhum token encontrado para:', config.url);
   }
   return config;
 });
@@ -26,12 +29,19 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    console.log('📡 Interceptor de resposta - URL:', error.config?.url);
+    console.log('📊 Status da resposta:', error.response?.status);
+    
     // Let components handle 401 errors themselves
     // Only clear storage if it's not a login attempt
     if (error.response?.status === 401 && !error.config?.url?.includes('/login')) {
+      console.log('🚪 Token inválido detectado, limpando storage...');
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user');
+    } else if (error.response?.status === 401) {
+      console.log('🔐 Erro 401 em tentativa de login - não limpando storage');
     }
+    
     return Promise.reject(error);
   }
 );

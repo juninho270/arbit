@@ -37,48 +37,76 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const checkAuthStatus = async () => {
     const token = localStorage.getItem('auth_token');
+    console.log('🔍 Verificando status de autenticação...');
+    console.log('🎫 Token encontrado:', token ? 'Sim' : 'Não');
+    
     if (token) {
       try {
+        console.log('📡 Fazendo requisição para /me...');
         const userData = await authAPI.me();
+        console.log('✅ Dados do usuário recebidos:', userData);
         setUser(userData);
         
         // Load all users if admin
         if (userData.role === 'admin') {
+          console.log('👑 Usuário é admin, carregando lista de usuários...');
           const users = await usersAPI.getAll();
           setAllUsers(users);
         }
-      } catch (error) {
-        console.log('Token validation failed, logging out...');
+      } catch (error: any) {
+        console.error('❌ Falha na validação do token:', error);
+        
+        if (error.response) {
+          console.log('📊 Status do erro:', error.response.status);
+          console.log('📋 Dados do erro:', error.response.data);
+        } else if (error.request) {
+          console.error('🌐 Erro de rede na validação:', error.request);
+        } else {
+          console.error('⚠️ Erro desconhecido na validação:', error.message);
+        }
+        
+        console.log('🚪 Fazendo logout devido ao erro...');
         localStorage.removeItem('auth_token');
         localStorage.removeItem('user');
         setUser(null);
         setAllUsers([]);
       }
+    } else {
+      console.log('❌ Nenhum token encontrado, usuário não autenticado');
     }
+    
+    console.log('✅ Verificação de autenticação concluída');
     setIsLoading(false);
   };
 
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
+    console.log('🔐 Iniciando processo de login...');
+    
     try {
       const response = await authAPI.login(email, password);
+      console.log('📡 Resposta da API de login:', response);
       const { user: userData, token } = response;
       
+      console.log('💾 Salvando token e dados do usuário...');
       localStorage.setItem('auth_token', token);
       localStorage.setItem('user', JSON.stringify(userData));
       setUser(userData);
       
       // Load all users if admin
       if (userData.role === 'admin') {
+        console.log('👑 Carregando usuários para admin...');
         const users = await usersAPI.getAll();
         setAllUsers(users);
       }
       
+      console.log('✅ Login realizado com sucesso');
       setIsLoading(false);
       return true;
-    } catch (error) {
+    } catch (error: any) {
+      console.error('❌ Erro no processo de login:', error);
       setIsLoading(false);
-      return false;
+      throw error; // Re-throw para que o LoginForm possa capturar
     }
   };
 
