@@ -204,6 +204,41 @@ export const adminAPI = {
   },
 };
 
+export const findTransactionHash = async (coinId: string, amount: number): Promise<{ hash: string; chain: string } | null> => {
+  // Simulate finding a real transaction hash
+  // In a real implementation, this would search across multiple blockchain explorers
+  
+  // Simulate some delay
+  await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
+  
+  // Simulate success/failure (70% success rate)
+  if (Math.random() < 0.7) {
+    const chains = ['bsc', 'eth', 'polygon', 'avalanche', 'arbitrum'];
+    const selectedChain = chains[Math.floor(Math.random() * chains.length)];
+    
+    // Generate a realistic-looking transaction hash
+    const hash = '0x' + Array.from({length: 64}, () => 
+      Math.floor(Math.random() * 16).toString(16)
+    ).join('');
+    
+    return { hash, chain: selectedChain };
+  }
+  
+  // Return null to simulate no transaction found
+  return null;
+};
+
+export const simulateArbitrageProfit = (amount: number): number => {
+  // Simulate profit between 2% and 8% of the investment
+  const profitPercentage = 0.02 + Math.random() * 0.06;
+  return amount * profitPercentage;
+};
+
+export const simulateExecutionTime = (): number => {
+  // Simulate execution time between 3-8 seconds
+  return 3000 + Math.random() * 5000;
+};
+
 export const getExplorerUrl = (hash: string, chain: string): string => {
   const explorers: { [key: string]: string } = {
     'bsc': 'https://bscscan.com/tx/',
