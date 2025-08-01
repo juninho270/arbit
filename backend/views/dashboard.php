@@ -3,7 +3,7 @@ $title = 'Dashboard - CryptoArb Pro';
 $currentPage = 'dashboard';
 ?>
 
-<div class="fade-in">
+<div class="fade-in dashboard-container">
     <!-- Stats Grid -->
     <div class="stats-grid">
         <div class="stat-card">
@@ -62,21 +62,21 @@ $currentPage = 'dashboard';
             <div class="card-header">
                 <h2 class="card-title">Performance (Últimos 30 Dias)</h2>
             </div>
-            <div style="height: 300px; display: flex; align-items: center; justify-content: center;">
+            <div class="card-body" style="height: 300px; display: flex; align-items: center; justify-content: center;">
                 <canvas id="performanceChart" width="400" height="300"></canvas>
             </div>
-            <div style="display: flex; justify-content: center; gap: 24px; margin-top: 16px;">
+            <div class="card-body" style="display: flex; justify-content: center; gap: 24px; border-top: 1px solid #334155;">
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <div style="width: 12px; height: 12px; background-color: #32FF7E; border-radius: 50%;"></div>
-                    <span style="color: #A6A6A6; font-size: 14px;">Total</span>
+                    <span style="color: #94a3b8; font-size: 14px;">Total</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <div style="width: 12px; height: 12px; background-color: #2188B6; border-radius: 50%;"></div>
-                    <span style="color: #A6A6A6; font-size: 14px;">Manual</span>
+                    <span style="color: #94a3b8; font-size: 14px;">Manual</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <div style="width: 12px; height: 12px; background-color: #FFD166; border-radius: 50%;"></div>
-                    <span style="color: #A6A6A6; font-size: 14px;">Bot</span>
+                    <span style="color: #94a3b8; font-size: 14px;">Bot</span>
                 </div>
             </div>
         </div>
@@ -86,59 +86,61 @@ $currentPage = 'dashboard';
             <div class="card-header">
                 <h2 class="card-title">Operações Recentes</h2>
             </div>
-            <?php if (empty($recentOperations)): ?>
-                <div style="text-align: center; padding: 48px 0;">
-                    <div style="font-size: 48px; margin-bottom: 16px;">📈</div>
-                    <p style="color: #A6A6A6;">Nenhuma operação realizada ainda</p>
-                </div>
-            <?php else: ?>
-                <div style="space-y: 16px;">
-                    <?php foreach ($recentOperations as $operation): ?>
-                        <div style="display: flex; align-items: center; gap: 16px; padding: 16px; background-color: #0D0D0D; border-radius: 8px;">
-                            <div style="flex-shrink: 0;">
-                                <?php if ($operation['type'] === 'bot'): ?>
-                                    <span style="color: #2188B6; font-size: 20px;">🤖</span>
-                                <?php else: ?>
-                                    <span style="color: #A6A6A6; font-size: 20px;">👤</span>
-                                <?php endif; ?>
-                            </div>
-                            
-                            <div style="flex: 1; min-width: 0;">
-                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                                    <p style="color: #E6E6E6; font-weight: 500;"><?php echo htmlspecialchars($operation['cryptocurrency']); ?></p>
-                                    <span class="badge badge-<?php echo $operation['status'] === 'completed' ? 'success' : ($operation['status'] === 'pending' ? 'warning' : 'danger'); ?>">
-                                        <?php 
-                                        echo $operation['status'] === 'completed' ? 'Concluída' : 
-                                             ($operation['status'] === 'pending' ? 'Pendente' : 'Falhou'); 
-                                        ?>
-                                    </span>
+            <div class="card-body">
+                <?php if (empty($recentOperations)): ?>
+                    <div style="text-align: center; padding: 48px 0;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">📈</div>
+                        <p style="color: #94a3b8;">Nenhuma operação realizada ainda</p>
+                    </div>
+                <?php else: ?>
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <?php foreach ($recentOperations as $operation): ?>
+                            <div style="display: flex; align-items: center; gap: 16px; padding: 16px; background-color: #0f172a; border: 1px solid #334155; border-radius: 8px;">
+                                <div style="flex-shrink: 0;">
+                                    <?php if ($operation['type'] === 'bot'): ?>
+                                        <span style="color: #3b82f6; font-size: 20px;">🤖</span>
+                                    <?php else: ?>
+                                        <span style="color: #94a3b8; font-size: 20px;">👤</span>
+                                    <?php endif; ?>
                                 </div>
                                 
-                                <div style="display: flex; align-items: center; gap: 16px; font-size: 14px; color: #A6A6A6;">
-                                    <span>Valor: $<?php echo number_format($operation['amount'], 2); ?></span>
-                                    <span class="text-success">
-                                        Lucro: $<?php echo number_format($operation['profit'], 2); ?> (<?php echo number_format($operation['profit_percentage'], 2); ?>%)
-                                    </span>
-                                    <div style="display: flex; align-items: center; gap: 4px;">
-                                        <span>🕒</span>
-                                        <span><?php echo date('d/m H:i', strtotime($operation['created_at'])); ?></span>
+                                <div style="flex: 1; min-width: 0;">
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                        <p style="color: #f1f5f9; font-weight: 500; margin: 0;"><?php echo htmlspecialchars($operation['cryptocurrency']); ?></p>
+                                        <span class="badge badge-<?php echo $operation['status'] === 'completed' ? 'success' : ($operation['status'] === 'pending' ? 'warning' : 'danger'); ?>">
+                                            <?php 
+                                            echo $operation['status'] === 'completed' ? 'Concluída' : 
+                                                 ($operation['status'] === 'pending' ? 'Pendente' : 'Falhou'); 
+                                            ?>
+                                        </span>
+                                    </div>
+                                    
+                                    <div style="display: flex; align-items: center; gap: 16px; font-size: 14px; color: #94a3b8;">
+                                        <span>Valor: $<?php echo number_format($operation['amount'], 2); ?></span>
+                                        <span class="text-success">
+                                            Lucro: $<?php echo number_format($operation['profit'], 2); ?> (<?php echo number_format($operation['profit_percentage'], 2); ?>%)
+                                        </span>
+                                        <div style="display: flex; align-items: center; gap: 4px;">
+                                            <span>🕒</span>
+                                            <span><?php echo date('d/m H:i', strtotime($operation['created_at'])); ?></span>
+                                        </div>
                                     </div>
                                 </div>
+                                
+                                <?php if (!empty($operation['transaction_hash'])): ?>
+                                    <button 
+                                        onclick="window.open('https://bscscan.com/tx/<?php echo htmlspecialchars($operation['transaction_hash']); ?>', '_blank')"
+                                        style="background: none; border: none; color: #3b82f6; cursor: pointer; padding: 8px;"
+                                        title="Ver no Explorer"
+                                    >
+                                        🔗
+                                    </button>
+                                <?php endif; ?>
                             </div>
-                            
-                            <?php if (!empty($operation['transaction_hash'])): ?>
-                                <button 
-                                    onclick="window.open('<?php echo $this->getExplorerUrl($operation['transaction_hash'], $operation['chain'] ?? 'bsc'); ?>', '_blank')"
-                                    style="background: none; border: none; color: #2188B6; cursor: pointer; padding: 8px;"
-                                    title="Ver no Explorer"
-                                >
-                                    🔗
-                                </button>
-                            <?php endif; ?>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 
@@ -147,23 +149,25 @@ $currentPage = 'dashboard';
         <div class="card-header">
             <h2 class="card-title">Ações Rápidas</h2>
         </div>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
-            <a href="/arbitrage" class="btn btn-primary">
-                <span>🎯</span>
-                <span>Nova Arbitragem</span>
-            </a>
-            <a href="/bot" class="btn btn-secondary">
-                <span>🤖</span>
-                <span>Configurar Bot</span>
-            </a>
-            <a href="/investments" class="btn btn-success">
-                <span>🏦</span>
-                <span>Investir</span>
-            </a>
-            <a href="/market" class="btn btn-secondary">
-                <span>📊</span>
-                <span>Ver Mercado</span>
-            </a>
+        <div class="card-body">
+            <div class="quick-actions">
+                <a href="/arbitrage" class="quick-action" style="border-color: #3b82f6;">
+                    <span class="quick-action-icon">🎯</span>
+                    <span class="quick-action-text">Nova Arbitragem</span>
+                </a>
+                <a href="/bot" class="quick-action">
+                    <span class="quick-action-icon">🤖</span>
+                    <span class="quick-action-text">Configurar Bot</span>
+                </a>
+                <a href="/investments" class="quick-action" style="border-color: #10b981;">
+                    <span class="quick-action-icon">🏦</span>
+                    <span class="quick-action-text">Investir</span>
+                </a>
+                <a href="/market" class="quick-action">
+                    <span class="quick-action-icon">📊</span>
+                    <span class="quick-action-text">Ver Mercado</span>
+                </a>
+            </div>
         </div>
     </div>
 </div>

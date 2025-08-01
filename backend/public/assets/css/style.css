@@ -9,23 +9,28 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  background-color: #0f172a;
+  background-color: #0f172a !important;
   color: #e2e8f0;
   line-height: 1.6;
   min-height: 100vh;
+}
+
+/* Force dark background everywhere */
+html, body, .app-container, .main-content, .page-content {
+  background-color: #0f172a !important;
 }
 
 /* Layout Principal */
 .app-container {
   display: flex;
   min-height: 100vh;
-  background-color: #0f172a;
+  background-color: #0f172a !important;
 }
 
 /* Sidebar - Exatamente como no React */
 .sidebar {
   width: 280px;
-  background-color: #1e293b;
+  background-color: #1e293b !important;
   border-right: 1px solid #334155;
   position: fixed;
   height: 100vh;
@@ -215,7 +220,7 @@ body {
   flex: 1;
   margin-left: 0;
   transition: margin-left 0.3s ease;
-  background-color: #0f172a;
+  background-color: #0f172a !important;
 }
 
 .main-content.sidebar-open {
@@ -224,7 +229,7 @@ body {
 
 /* Header */
 .header {
-  background-color: #1e293b;
+  background-color: #1e293b !important;
   border-bottom: 1px solid #334155;
   padding: 1rem 1.5rem;
   position: sticky;
@@ -367,15 +372,18 @@ body {
 /* Page Content */
 .page-content {
   padding: 1.5rem;
+  background-color: #0f172a !important;
+  min-height: calc(100vh - 80px);
 }
 
 /* Cards - Exatamente como no React */
 .card {
-  background-color: #1e293b;
+  background-color: #1e293b !important;
   border: 1px solid #334155;
   border-radius: 0.75rem;
   margin-bottom: 1.5rem;
   overflow: hidden;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
 .card-header {
@@ -384,6 +392,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  background-color: #1e293b !important;
 }
 
 .card-title {
@@ -395,6 +404,7 @@ body {
 
 .card-body {
   padding: 1.5rem;
+  background-color: #1e293b !important;
 }
 
 /* Stats Grid - Exatamente como no React */
@@ -406,17 +416,18 @@ body {
 }
 
 .stat-card {
-  background-color: #1e293b;
+  background-color: #1e293b !important;
   border: 1px solid #334155;
   border-radius: 0.75rem;
   padding: 1.5rem;
   transition: all 0.2s ease;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
 .stat-card:hover {
   border-color: #3b82f6;
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 25px -3px rgba(59, 130, 246, 0.1), 0 4px 6px -2px rgba(59, 130, 246, 0.05);
 }
 
 .stat-card-header {
@@ -571,7 +582,7 @@ body {
 .table {
   width: 100%;
   border-collapse: collapse;
-  background-color: #1e293b;
+  background-color: #1e293b !important;
   border-radius: 0.75rem;
   overflow: hidden;
 }
@@ -584,7 +595,7 @@ body {
 }
 
 .table th {
-  background-color: #0f172a;
+  background-color: #0f172a !important;
   color: #94a3b8;
   font-weight: 600;
   font-size: 0.875rem;
@@ -595,10 +606,14 @@ body {
 .table td {
   color: #f1f5f9;
   font-size: 0.875rem;
+  background-color: #1e293b !important;
 }
 
 .table tr:hover {
-  background-color: #334155;
+  background-color: #334155 !important;
+}
+
+  background-color: #334155 !important;
 }
 
 .table tr:last-child td {
@@ -730,13 +745,133 @@ body {
 }
 
 .notification {
-  background-color: #1e293b;
+  background-color: #1e293b !important;
   border: 1px solid #334155;
   border-radius: 0.5rem;
   padding: 1rem;
   min-width: 300px;
   box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   animation: slideIn 0.3s ease-out;
+}
+
+/* Admin specific styles */
+.admin-container {
+  background-color: #0f172a !important;
+  min-height: 100vh;
+}
+
+.admin-content {
+  background-color: #0f172a !important;
+}
+
+/* Dashboard specific styles */
+.dashboard-container {
+  background-color: #0f172a !important;
+  min-height: 100vh;
+}
+
+.dashboard-content {
+  background-color: #0f172a !important;
+}
+
+/* Force dark theme on all containers */
+.container, .content, .wrapper {
+  background-color: #0f172a !important;
+}
+
+/* System status indicators */
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background-color: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 0.5rem;
+}
+
+.status-indicator.online {
+  border-color: #10b981;
+}
+
+.status-indicator.offline {
+  border-color: #ef4444;
+}
+
+/* Activity feed */
+.activity-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 0.5rem;
+  margin-bottom: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.activity-item:hover {
+  border-color: #3b82f6;
+  background-color: #1e293b;
+}
+
+.activity-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: #10b981;
+  flex-shrink: 0;
+}
+
+.activity-content {
+  flex: 1;
+}
+
+.activity-message {
+  color: #f1f5f9;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.activity-time {
+  color: #64748b;
+  font-size: 0.75rem;
+  margin: 0;
+}
+
+/* Quick actions grid */
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.quick-action {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 0.5rem;
+  color: #f1f5f9;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.quick-action:hover {
+  border-color: #3b82f6;
+  background-color: #334155;
+  transform: translateY(-1px);
+}
+
+.quick-action-icon {
+  font-size: 1.25rem;
+}
+
+.quick-action-text {
+  font-weight: 500;
 }
 
 .notification-success {
