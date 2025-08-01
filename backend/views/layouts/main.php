@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($title ?? 'CryptoArb Pro'); ?></title>
     <link rel="stylesheet" href="/assets/css/style.css">
-    <link rel="icon" type="image/svg+xml" href="/api/assets/favicon.ico">
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.ico">
 </head>
 <body>
     <!-- Mobile Overlay -->
@@ -13,12 +13,12 @@
     
     <div class="app-container">
         <!-- Sidebar -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
             <!-- Header -->
             <div class="sidebar-header">
                 <div class="sidebar-logo">
-                    <div class="sidebar-logo-icon">₿</div>
-                    <span class="sidebar-logo-text">CryptoArb</span>
+                    <div class="sidebar-logo-icon">🚀</div>
+                    <span class="sidebar-logo-text">CryptoArb Pro</span>
                 </div>
             </div>
 
@@ -30,12 +30,12 @@
                     </div>
                     <div class="sidebar-user-details">
                         <h3><?php echo htmlspecialchars($user['name'] ?? 'Usuário'); ?></h3>
-                        <p><?php echo htmlspecialchars($user['role'] ?? 'user'); ?></p>
+                        <p><?php echo $user['role'] === 'admin' ? 'Administrador' : 'Usuário'; ?></p>
                     </div>
                 </div>
                 
                 <div class="sidebar-balance">
-                    <p>Saldo Total</p>
+                    <p>💰 Saldo Total</p>
                     <p id="total-balance">$<?php echo number_format(($user['balance'] ?? 0) + ($user['bot_balance'] ?? 0), 2, ',', '.'); ?></p>
                 </div>
             </div>
@@ -46,7 +46,7 @@
                     <?php if (($user['role'] ?? 'user') === 'admin'): ?>
                         <li>
                             <a href="/admin" class="<?php echo ($currentPage ?? '') === 'admin' ? 'active' : ''; ?>">
-                                <span class="icon">🛡️</span>
+                                <span class="icon">⚡</span>
                                 <span>Painel Admin</span>
                             </a>
                         </li>
@@ -94,7 +94,7 @@
             <!-- Logout -->
             <div class="sidebar-logout">
                 <button onclick="logout()">
-                    <span class="icon">🚪</span>
+                    <span class="icon">↩️</span>
                     <span>Sair</span>
                 </button>
             </div>
@@ -107,8 +107,8 @@
                 <div class="header-content">
                     <div class="header-left">
                         <!-- Mobile Menu Button -->
-                        <button class="mobile-menu-btn">
-                            <span class="icon">☰</span>
+                        <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                            <span class="icon">≡</span>
                         </button>
                         
                         <?php if (($user['role'] ?? 'user') !== 'admin'): ?>
@@ -122,7 +122,7 @@
                             </div>
                             
                             <div class="header-balance-item">
-                                <span class="icon">📈</span>
+                                <span class="icon">🤖</span>
                                 <div>
                                     <p>Saldo Bot</p>
                                     <p id="bot-balance">$<?php echo number_format($user['bot_balance'] ?? 0, 2, ',', '.'); ?></p>
@@ -133,7 +133,7 @@
 
                         <div class="header-status">
                             <div class="status-dot"></div>
-                            <span>Sistema Online</span>
+                            <span>🟢 Sistema Online</span>
                         </div>
                     </div>
 

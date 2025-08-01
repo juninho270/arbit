@@ -14,18 +14,16 @@ class CryptoApp {
     }
 
     setupMobileMenu() {
-        const menuBtn = document.querySelector('.mobile-menu-btn');
-        const sidebar = document.querySelector('.sidebar');
+        const sidebar = document.getElementById('sidebar');
         const overlay = document.querySelector('.mobile-overlay');
         const mainContent = document.querySelector('.main-content');
 
-        if (menuBtn && sidebar) {
-            menuBtn.addEventListener('click', () => {
-                sidebar.classList.toggle('open');
-                overlay?.classList.toggle('active');
-                mainContent?.classList.toggle('sidebar-open');
-            });
-        }
+        // Mobile menu toggle function (called from HTML)
+        window.toggleSidebar = () => {
+            sidebar?.classList.toggle('open');
+            overlay?.classList.toggle('active');
+            mainContent?.classList.toggle('sidebar-open');
+        };
 
         if (overlay) {
             overlay.addEventListener('click', () => {
@@ -72,12 +70,16 @@ class CryptoApp {
 
         // Auto remove
         setTimeout(() => {
-            notification.remove();
+            if (notification.parentNode) {
+                notification.remove();
+            }
         }, duration);
 
         // Manual close
         notification.querySelector('.notification-close').addEventListener('click', () => {
-            notification.remove();
+            if (notification.parentNode) {
+                notification.remove();
+            }
         });
     }
 
@@ -116,12 +118,12 @@ class CryptoApp {
         const error = document.createElement('div');
         error.className = 'field-error';
         error.textContent = message;
-        error.style.color = '#FF4D4D';
+        error.style.color = '#ef4444';
         error.style.fontSize = '12px';
         error.style.marginTop = '4px';
         
         input.parentNode.appendChild(error);
-        input.style.borderColor = '#FF4D4D';
+        input.style.borderColor = '#ef4444';
     }
 
     clearFieldError(input) {
@@ -142,10 +144,14 @@ class CryptoApp {
     }
 
     makeTableResponsive(table) {
-        const wrapper = document.createElement('div');
-        wrapper.style.overflowX = 'auto';
-        table.parentNode.insertBefore(wrapper, table);
-        wrapper.appendChild(table);
+        if (!table.parentNode.classList.contains('table-wrapper')) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'table-wrapper';
+            wrapper.style.overflowX = 'auto';
+            wrapper.style.borderRadius = '0.75rem';
+            table.parentNode.insertBefore(wrapper, table);
+            wrapper.appendChild(table);
+        }
     }
 
     startAutoRefresh() {
@@ -164,10 +170,18 @@ class CryptoApp {
         // For now, we'll just add a subtle animation to show it's refreshing
         [...priceElements, ...balanceElements].forEach(element => {
             element.style.opacity = '0.7';
+            element.style.transition = 'opacity 0.3s ease';
             setTimeout(() => {
                 element.style.opacity = '1';
             }, 500);
         });
+    }
+
+    // Update crypto prices (called from market page)
+    updateCryptoPrices() {
+        // This would make an AJAX call to update prices
+        console.log('Updating crypto prices...');
+        this.refreshDynamicContent();
     }
 
     // Utility functions
@@ -207,6 +221,14 @@ function logout() {
 // Initialize app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     window.cryptoApp = new CryptoApp();
+    
+    // Show welcome message
+    setTimeout(() => {
+        if (window.cryptoApp && !sessionStorage.getItem('welcomeShown')) {
+            window.cryptoApp.showNotification('Bem-vindo ao CryptoArb Pro! 🚀', 'success', 3000);
+            sessionStorage.setItem('welcomeShown', 'true');
+        }
+    }, 1000);
 });
 
 // Global error handler
@@ -221,15 +243,16 @@ window.addEventListener('error', (e) => {
     }
 });
 
-// Service Worker registration (for future PWA features)
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-            .then(registration => {
-                console.log('SW registered: ', registration);
-            })
-            .catch(registrationError => {
-                console.log('SW registration failed: ', registrationError);
+// Smooth scrolling for anchor links
+document.addEventListener('click', (e) => {
+    if (e.target.matches('a[href^="#"]')) {
+        e.preventDefault();
+        const target = document.querySelector(e.target.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
             });
-    });
-}
+        }
+    }
+});
